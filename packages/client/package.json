@@ -1,0 +1,36 @@
+{
+  "name": "@rustyflows/client",
+  "version": "0.0.0",
+  "description": "Generated TypeScript transport client for RustyFlows.",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "artifacts/openapi.json",
+    "dist",
+    "README.md",
+    "schemas"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./generated/openapi": {
+      "types": "./dist/generated/openapi.d.ts",
+      "import": "./dist/generated/openapi.js"
+    },
+    "./schemas/governed-workflow-package.schema.json": "./schemas/governed-workflow-package.schema.json",
+    "./schemas/workflow-ir.schema.json": "./schemas/workflow-ir.schema.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "check:generated": "bun run generate && git diff --exit-code -- src/generated/openapi.ts",
+    "generate": "openapi-typescript ./artifacts/openapi.json -o ./src/generated/openapi.ts",
+    "pack:dry-run": "npm pack --dry-run",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.15.0"
+  }
+}

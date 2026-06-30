@@ -1,0 +1,21 @@
+{
+  "name": "rustyflows-sdk",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun --filter '*' build",
+    "check:generated": "bun --filter '@rustyflows/client' check:generated",
+    "sync:artifacts": "bun packages/client/scripts/sync-artifacts.mjs",
+    "test": "bun --filter '*' test",
+    "typecheck": "bun --filter '*' typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "openapi-typescript": "^7.10.1",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  }
+}

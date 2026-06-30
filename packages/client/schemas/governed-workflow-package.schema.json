@@ -1,0 +1,3335 @@
+{
+  "$schema": "https://spec.openapis.org/oas/3.1/schema/2022-10-07",
+  "artifact": "governed-workflow-package",
+  "component_names": [
+    "AggFunction",
+    "AggregateExpr",
+    "AttachmentBinding",
+    "AvailableAgent",
+    "CastType",
+    "CheckpointMode",
+    "ColumnExpr",
+    "ColumnRename",
+    "ComparisonOp",
+    "Condition",
+    "DataOp",
+    "DataOpOutputFormat",
+    "DataOpStep",
+    "ExpressionCondition",
+    "FanOutErrorPolicy",
+    "FanOutStep",
+    "FanOutStrategy",
+    "FilterExpr",
+    "FilterOp",
+    "GateStep",
+    "GateTimeoutAction",
+    "GateType",
+    "GenerateStep",
+    "GovernedWorkflowPackage",
+    "ImageProcessOp",
+    "ImageProcessStep",
+    "ImageQuality",
+    "ImageSize",
+    "ImageSizePreset",
+    "InlineAgentConfig",
+    "InlineToolSpec",
+    "JoinKey",
+    "JoinType",
+    "KnowledgeOutputFormat",
+    "KnowledgeSearchMode",
+    "KnowledgeStep",
+    "LogicalResourceRef",
+    "LoopCondition",
+    "LoopStep",
+    "LoopStrategy",
+    "MapOp",
+    "MapStep",
+    "MathOp",
+    "ParallelReducer",
+    "ParallelStep",
+    "PivotAggregate",
+    "PromptStep",
+    "ReportGenerateData",
+    "ReportOutputFormat",
+    "RerankConfig",
+    "RetryPolicy",
+    "RouterCase",
+    "RouterExpressionCase",
+    "RouterRegexCase",
+    "RouterStep",
+    "RouterStrategy",
+    "RuntimeTarget",
+    "RuntimeTargetHints",
+    "SortColumn",
+    "StepResumePolicy",
+    "StreamingStrategy",
+    "SupervisorStep",
+    "ToolStep",
+    "Workflow",
+    "WorkflowCompatibility",
+    "WorkflowPackageResources",
+    "WorkflowStep"
+  ],
+  "components": {
+    "schemas": {
+      "AggFunction": {
+        "description": "Supported aggregate functions.",
+        "enum": [
+          "sum",
+          "count",
+          "mean",
+          "min",
+          "max",
+          "first",
+          "last",
+          "median",
+          "std_dev"
+        ],
+        "type": "string"
+      },
+      "AggregateExpr": {
+        "description": "Aggregate expression for GroupBy.",
+        "properties": {
+          "alias": {
+            "description": "Output column alias (defaults to `{column}_{function}`).",
+            "nullable": true,
+            "type": "string"
+          },
+          "column": {
+            "description": "Source column name.",
+            "type": "string"
+          },
+          "function": {
+            "$ref": "#/components/schemas/AggFunction"
+          }
+        },
+        "required": [
+          "column",
+          "function"
+        ],
+        "type": "object"
+      },
+      "AttachmentBinding": {
+        "description": "Binds attachments from a named step output into the template context.",
+        "properties": {
+          "bind_to": {
+            "description": "Field name in the template context to bind these attachments to.",
+            "type": "string"
+          },
+          "from": {
+            "description": "Source: which step's attachments to include (step name).",
+            "type": "string"
+          },
+          "mime_filter": {
+            "description": "Filter by mime type prefix (e.g., \"image/\" for all images).",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "bind_to"
+        ],
+        "type": "object"
+      },
+      "AvailableAgent": {
+        "description": "An agent available to the Supervisor for delegation.",
+        "properties": {
+          "agent_id": {
+            "description": "UUID of the agent.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "description": {
+            "description": "Optional description override (used in the tool definition shown to the supervisor).\nFalls back to the agent's DB description if not set.",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "agent_id"
+        ],
+        "type": "object"
+      },
+      "CastType": {
+        "description": "Cast target types.",
+        "enum": [
+          "string",
+          "int64",
+          "float64",
+          "boolean",
+          "date",
+          "datetime"
+        ],
+        "type": "string"
+      },
+      "CheckpointMode": {
+        "description": "Checkpoint mode for workflow run tracking and resume support.",
+        "enum": [
+          "none",
+          "per_step",
+          "on_failure"
+        ],
+        "type": "string"
+      },
+      "ColumnExpr": {
+        "description": "Column expression for computed columns (AddColumn).",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "description": "A literal value.",
+            "properties": {
+              "type": {
+                "enum": [
+                  "Literal"
+                ],
+                "type": "string"
+              },
+              "value": {}
+            },
+            "required": [
+              "value",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Reference an existing column.",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "Column"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Arithmetic on two sub-expressions.",
+            "properties": {
+              "left": {
+                "$ref": "#/components/schemas/ColumnExpr"
+              },
+              "op": {
+                "$ref": "#/components/schemas/MathOp"
+              },
+              "right": {
+                "$ref": "#/components/schemas/ColumnExpr"
+              },
+              "type": {
+                "enum": [
+                  "Math"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "left",
+              "op",
+              "right",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Concatenate string parts.",
+            "properties": {
+              "parts": {
+                "items": {
+                  "$ref": "#/components/schemas/ColumnExpr"
+                },
+                "type": "array"
+              },
+              "separator": {
+                "nullable": true,
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "Concat"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "parts",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "If-then-else based on a filter condition.",
+            "properties": {
+              "condition": {
+                "$ref": "#/components/schemas/FilterExpr"
+              },
+              "else_value": {
+                "$ref": "#/components/schemas/ColumnExpr"
+              },
+              "then_value": {
+                "$ref": "#/components/schemas/ColumnExpr"
+              },
+              "type": {
+                "enum": [
+                  "Conditional"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "condition",
+              "then_value",
+              "else_value",
+              "type"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ColumnRename": {
+        "description": "Column rename mapping.",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ],
+        "type": "object"
+      },
+      "ComparisonOp": {
+        "description": "Comparison operators for expression-based routing conditions.",
+        "enum": [
+          "eq",
+          "neq",
+          "gt",
+          "gte",
+          "lt",
+          "lte"
+        ],
+        "type": "string"
+      },
+      "Condition": {
+        "description": "Conditional execution configuration for any step.",
+        "properties": {
+          "template": {
+            "description": "Template expression that should evaluate to \"true\" to execute the step.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "template"
+        ],
+        "type": "object"
+      },
+      "DataOp": {
+        "description": "A single data operation in a DataOp pipeline.",
+        "discriminator": {
+          "propertyName": "op"
+        },
+        "oneOf": [
+          {
+            "description": "Keep only the specified columns.",
+            "properties": {
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "Select"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "columns",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Filter rows by a boolean expression.",
+            "properties": {
+              "expression": {
+                "$ref": "#/components/schemas/FilterExpr"
+              },
+              "op": {
+                "enum": [
+                  "Filter"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "expression",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Sort rows by one or more columns.",
+            "properties": {
+              "by": {
+                "items": {
+                  "$ref": "#/components/schemas/SortColumn"
+                },
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "Sort"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "by",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Limit the number of rows returned.",
+            "properties": {
+              "count": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "offset": {
+                "minimum": 0,
+                "nullable": true,
+                "type": "integer"
+              },
+              "op": {
+                "enum": [
+                  "Limit"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "count",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Rename columns.",
+            "properties": {
+              "mapping": {
+                "items": {
+                  "$ref": "#/components/schemas/ColumnRename"
+                },
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "Rename"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "mapping",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Remove duplicate rows (optionally on specific columns).",
+            "properties": {
+              "columns": {
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true,
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "Distinct"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Group by columns and compute aggregates.",
+            "properties": {
+              "aggregates": {
+                "items": {
+                  "$ref": "#/components/schemas/AggregateExpr"
+                },
+                "type": "array"
+              },
+              "by": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "GroupBy"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "by",
+              "aggregates",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Add a computed column.",
+            "properties": {
+              "expression": {
+                "$ref": "#/components/schemas/ColumnExpr"
+              },
+              "name": {
+                "type": "string"
+              },
+              "op": {
+                "enum": [
+                  "AddColumn"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "expression",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Join with another named output.",
+            "properties": {
+              "join_type": {
+                "$ref": "#/components/schemas/JoinType"
+              },
+              "on": {
+                "items": {
+                  "$ref": "#/components/schemas/JoinKey"
+                },
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "Join"
+                ],
+                "type": "string"
+              },
+              "right_from": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "right_from",
+              "on",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Pivot (long → wide): spread a column's values into new columns.",
+            "properties": {
+              "aggregate": {
+                "$ref": "#/components/schemas/PivotAggregate"
+              },
+              "columns": {
+                "type": "string"
+              },
+              "index": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "Pivot"
+                ],
+                "type": "string"
+              },
+              "values": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "columns",
+              "values",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Unpivot (wide → long): gather columns into key-value rows.",
+            "properties": {
+              "id_vars": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "op": {
+                "enum": [
+                  "Unpivot"
+                ],
+                "type": "string"
+              },
+              "value_name": {
+                "nullable": true,
+                "type": "string"
+              },
+              "value_vars": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "variable_name": {
+                "nullable": true,
+                "type": "string"
+              }
+            },
+            "required": [
+              "id_vars",
+              "value_vars",
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Cast a column to a different type.",
+            "properties": {
+              "column": {
+                "type": "string"
+              },
+              "op": {
+                "enum": [
+                  "Cast"
+                ],
+                "type": "string"
+              },
+              "to_type": {
+                "$ref": "#/components/schemas/CastType"
+              }
+            },
+            "required": [
+              "column",
+              "to_type",
+              "op"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "DataOpOutputFormat": {
+        "description": "Output format for DataOp results.",
+        "enum": [
+          "json_array",
+          "json_rows",
+          "csv",
+          "summary"
+        ],
+        "type": "string"
+      },
+      "DataOpStep": {
+        "description": "Step: Declarative tabular data manipulation via Polars DataFrames.\n\nConverts a JSON array to a DataFrame, applies a pipeline of operations\n(filter, sort, aggregate, join, etc.), and converts back to JSON.",
+        "properties": {
+          "from": {
+            "description": "Named output to use as input source (default: ctx.current()).",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Optional name for the output (referenced by later steps as {{name}}).",
+            "nullable": true,
+            "type": "string"
+          },
+          "operations": {
+            "description": "Pipeline of operations applied sequentially to the DataFrame.",
+            "items": {
+              "$ref": "#/components/schemas/DataOp"
+            },
+            "type": "array"
+          },
+          "output_format": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DataOpOutputFormat"
+              }
+            ],
+            "nullable": true
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "operations"
+        ],
+        "type": "object"
+      },
+      "ExpressionCondition": {
+        "description": "A condition evaluated against tabular data for expression routing.",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "description": "Apply a filter expression; matches if any rows remain.",
+            "properties": {
+              "expression": {
+                "$ref": "#/components/schemas/FilterExpr"
+              },
+              "type": {
+                "enum": [
+                  "Filter"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "expression",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Compare the DataFrame row count against a threshold.",
+            "properties": {
+              "op": {
+                "$ref": "#/components/schemas/ComparisonOp"
+              },
+              "type": {
+                "enum": [
+                  "RowCount"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "op",
+              "value",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Compute an aggregate on a column and compare against a threshold.",
+            "properties": {
+              "column": {
+                "type": "string"
+              },
+              "function": {
+                "$ref": "#/components/schemas/AggFunction"
+              },
+              "op": {
+                "$ref": "#/components/schemas/ComparisonOp"
+              },
+              "type": {
+                "enum": [
+                  "Aggregate"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "column",
+              "function",
+              "op",
+              "value",
+              "type"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "FanOutErrorPolicy": {
+        "description": "Error policy for FanOut step when a branch fails.",
+        "enum": [
+          "fail_fast",
+          "continue"
+        ],
+        "type": "string"
+      },
+      "FanOutStep": {
+        "description": "Step: Fan out over a dynamic runtime array with concurrent branch execution.\n\nTakes an array produced at runtime (e.g., from a Generate step) and processes\neach item concurrently through branch workflows, with optional grouping support.",
+        "properties": {
+          "group_var": {
+            "description": "Variable name for the group key in branch context (default: \"group\").",
+            "nullable": true,
+            "type": "string"
+          },
+          "index_var": {
+            "description": "Variable name for the current index in branch context (default: \"index\").",
+            "nullable": true,
+            "type": "string"
+          },
+          "item_var": {
+            "description": "Variable name for the current item in branch context (default: \"item\").",
+            "nullable": true,
+            "type": "string"
+          },
+          "max_concurrency": {
+            "description": "Maximum number of concurrent branches (None = unlimited).",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "name": {
+            "description": "Optional name for the combined output (referenced by later steps as {{name}}).",
+            "nullable": true,
+            "type": "string"
+          },
+          "on_error": {
+            "$ref": "#/components/schemas/FanOutErrorPolicy"
+          },
+          "path": {
+            "description": "Optional JSON path into the source value to extract the array.",
+            "nullable": true,
+            "type": "string"
+          },
+          "reducer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ParallelReducer"
+              }
+            ],
+            "nullable": true
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "source": {
+            "description": "Source of the array (named output, \"last\", or \"input\"). Supports template variables.",
+            "type": "string"
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/FanOutStrategy"
+          },
+          "streaming_strategy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StreamingStrategy"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "source",
+          "strategy"
+        ],
+        "type": "object"
+      },
+      "FanOutStrategy": {
+        "description": "Strategy for distributing items across branches in a FanOut step.",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "description": "One branch per item, all using the same template workflow.",
+            "properties": {
+              "branch_template": {
+                "$ref": "#/components/schemas/Workflow"
+              },
+              "type": {
+                "enum": [
+                  "Each"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "branch_template",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Group items by a key field and route each group to a different branch workflow.",
+            "properties": {
+              "branches": {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/Workflow"
+                },
+                "type": "object"
+              },
+              "key": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "GroupBy"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "branches",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Group items by a tags field (array of strings) and run matching branches for each tag.\nAn item can produce multiple branches if it has multiple matching tags.",
+            "properties": {
+              "branches": {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/Workflow"
+                },
+                "type": "object"
+              },
+              "tags_field": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "GroupByTags"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "tags_field",
+              "branches",
+              "type"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "FilterExpr": {
+        "description": "Boolean filter expression DSL.",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "description": "Single comparison condition.",
+            "properties": {
+              "column": {
+                "type": "string"
+              },
+              "op": {
+                "$ref": "#/components/schemas/FilterOp"
+              },
+              "type": {
+                "enum": [
+                  "Condition"
+                ],
+                "type": "string"
+              },
+              "value": {}
+            },
+            "required": [
+              "column",
+              "op",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Logical AND of sub-expressions.",
+            "properties": {
+              "conditions": {
+                "items": {
+                  "$ref": "#/components/schemas/FilterExpr"
+                },
+                "type": "array"
+              },
+              "type": {
+                "enum": [
+                  "And"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "conditions",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Logical OR of sub-expressions.",
+            "properties": {
+              "conditions": {
+                "items": {
+                  "$ref": "#/components/schemas/FilterExpr"
+                },
+                "type": "array"
+              },
+              "type": {
+                "enum": [
+                  "Or"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "conditions",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Logical NOT of a sub-expression.",
+            "properties": {
+              "condition": {
+                "$ref": "#/components/schemas/FilterExpr"
+              },
+              "type": {
+                "enum": [
+                  "Not"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "condition",
+              "type"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "FilterOp": {
+        "description": "Filter comparison operators.",
+        "enum": [
+          "eq",
+          "neq",
+          "gt",
+          "gte",
+          "lt",
+          "lte",
+          "contains",
+          "starts_with",
+          "ends_with",
+          "in",
+          "not_in",
+          "is_null",
+          "is_not_null"
+        ],
+        "type": "string"
+      },
+      "GateStep": {
+        "description": "Step: Pause the workflow and wait for human input before continuing.",
+        "properties": {
+          "gate_type": {
+            "$ref": "#/components/schemas/GateType"
+          },
+          "metadata": {
+            "description": "Optional metadata to attach to the gate record.",
+            "type": "object"
+          },
+          "name": {
+            "description": "Optional name for the result (lets later steps reference the gate response).",
+            "nullable": true,
+            "type": "string"
+          },
+          "options": {
+            "description": "Required for Select gates: the options to choose from.",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "type": "array"
+          },
+          "prompt": {
+            "description": "Prompt to display to the user (supports {{input}}, {{last}}, etc.).",
+            "type": "string"
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "timeout_action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GateTimeoutAction"
+              }
+            ],
+            "nullable": true
+          },
+          "timeout_seconds": {
+            "description": "Optional timeout, in seconds, after which the gate is eligible for expiry handling.",
+            "format": "int64",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "gate_type",
+          "prompt"
+        ],
+        "type": "object"
+      },
+      "GateTimeoutAction": {
+        "description": "Default action to apply when a gate expires.",
+        "enum": [
+          "approve",
+          "reject",
+          "skip"
+        ],
+        "type": "string"
+      },
+      "GateType": {
+        "description": "Gate type for human-in-the-loop steps.",
+        "enum": [
+          "approval",
+          "input",
+          "select"
+        ],
+        "type": "string"
+      },
+      "GenerateStep": {
+        "description": "Step: Use an LLM to produce structured JSON output.\n\nSupports agent resolution (inline or DB), optional JSON schema validation,\nretry logic for malformed responses, and conversation memory.",
+        "properties": {
+          "agent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InlineAgentConfig"
+              }
+            ],
+            "nullable": true
+          },
+          "agent_id": {
+            "description": "UUID of the agent to invoke (mutually exclusive with `agent`).",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "exclude_mcp_servers": {
+            "description": "MCP servers to exclude from tool resolution for this step.\nBy default all MCP servers are available; list server names here to opt-out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fallback": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Workflow"
+              }
+            ],
+            "nullable": true
+          },
+          "image_urls": {
+            "description": "Optional list of image URLs to include with the generation prompt (for vision models).\nCan use template variables like \"{{attachment_0}}\" or \"{{optimized_image}}\".",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "type": "array"
+          },
+          "include_attachments": {
+            "description": "If true, automatically include all image attachments from the workflow request.",
+            "type": "boolean"
+          },
+          "inline_tools": {
+            "description": "Inline tool definitions — built-in tools configured directly on the step.\nThese are synthesized into ToolRows at execution time (no DB lookup).",
+            "items": {
+              "$ref": "#/components/schemas/InlineToolSpec"
+            },
+            "type": "array"
+          },
+          "input_template": {
+            "description": "Optional input template (may reference {{input}}, {{last}}, named outputs, etc.).",
+            "nullable": true,
+            "type": "string"
+          },
+          "max_retries": {
+            "description": "Maximum number of retry attempts if JSON parsing/validation fails (default 0).",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "memory": {
+            "description": "Explicit opt-in to use conversation memory for this step (default off).",
+            "nullable": true,
+            "type": "boolean"
+          },
+          "memory_record_original_input": {
+            "description": "If true, record the original user input (ctx.initial_input) instead of step_input when writing to memory.",
+            "type": "boolean"
+          },
+          "memory_window_messages": {
+            "description": "Optional memory window by count of messages to include when memory is enabled.",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "memory_window_tokens": {
+            "description": "Optional memory window by token budget to include when memory is enabled.",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "name": {
+            "description": "Optional name for the result (lets later steps reference this output by name).",
+            "nullable": true,
+            "type": "string"
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "retry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RetryPolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "schema": {
+            "description": "Optional JSON schema describing the expected output structure.\nUsed for basic type validation (array/object/string) of the LLM response.",
+            "type": "object"
+          },
+          "tool_agent_ids": {
+            "description": "Optional \"agent tools\" represented as agent ids (agent-as-tool).\nWhen provided, the target agent may use these tool agents to fulfill the request.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "GovernedWorkflowPackage": {
+        "description": "SDK/CLI-authored package that wraps the runtime workflow IR with governance\nmetadata. Backend runtime paths should unwrap `workflow` before execution.",
+        "properties": {
+          "compatibility": {
+            "$ref": "#/components/schemas/WorkflowCompatibility"
+          },
+          "description": {
+            "description": "Optional package description.",
+            "nullable": true,
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Optional display name for UI surfaces.",
+            "nullable": true,
+            "type": "string"
+          },
+          "input_schema": {
+            "description": "JSON Schema describing caller input.",
+            "type": "object"
+          },
+          "name": {
+            "description": "Stable package name used by SDKs, CLI, and deployment records.",
+            "type": "string"
+          },
+          "output_schema": {
+            "description": "JSON Schema describing package output.",
+            "type": "object"
+          },
+          "policy_refs": {
+            "description": "Referenced policy names in `resources.policies` or tenant policy catalogs.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "resources": {
+            "$ref": "#/components/schemas/WorkflowPackageResources"
+          },
+          "ruleset_refs": {
+            "description": "Referenced ruleset names in `resources.rulesets` or tenant rule catalogs.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "runtime": {
+            "$ref": "#/components/schemas/RuntimeTargetHints"
+          },
+          "schema_version": {
+            "description": "Version of the governed package schema, independent of app or DB schema versions.",
+            "type": "string"
+          },
+          "version": {
+            "description": "Author-controlled package version.",
+            "type": "string"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/Workflow"
+          }
+        },
+        "required": [
+          "schema_version",
+          "name",
+          "version",
+          "workflow"
+        ],
+        "type": "object"
+      },
+      "ImageProcessOp": {
+        "description": "Image processing operations for preprocessing images before vision models.",
+        "discriminator": {
+          "propertyName": "op"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "data": {
+                "description": "Transform an image with flexible size and quality settings.",
+                "properties": {
+                  "format": {
+                    "description": "Target format: \"jpeg\", \"png\", \"webp\" (optional - if not specified, keeps original format).",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "quality": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ImageQuality"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "size": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/ImageSize"
+                      }
+                    ],
+                    "nullable": true
+                  }
+                },
+                "type": "object"
+              },
+              "op": {
+                "enum": [
+                  "Transform"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "Optimize image for LLM vision models with a simple detail level setting.\nThis is a convenience operation that combines resize + compress with optimal settings.",
+                "properties": {
+                  "detail": {
+                    "description": "Target detail level: \"low\", \"high\", or \"auto\".\n- \"low\": 512px max, quality 80, optimized for token efficiency\n- \"high\": 2048px max, quality 90, optimized for detail\n- \"auto\": Analyzes image and picks appropriate settings",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "detail"
+                ],
+                "type": "object"
+              },
+              "op": {
+                "enum": [
+                  "OptimizeForLlm"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "op": {
+                "enum": [
+                  "Metadata"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ImageProcessStep": {
+        "description": "Step: Preprocess images before sending to vision-capable LLMs.",
+        "properties": {
+          "name": {
+            "description": "Optional name to store the result in named_outputs.",
+            "nullable": true,
+            "type": "string"
+          },
+          "op": {
+            "$ref": "#/components/schemas/ImageProcessOp"
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "source": {
+            "description": "Source of the image:\n- \"attachment:N\" (0-4) to reference an attachment by index\n- \"{{variable}}\" to use a template variable containing a URL\n- \"last\" to use the output of the previous step",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "source"
+        ],
+        "type": "object"
+      },
+      "ImageQuality": {
+        "description": "Image quality settings for lossy compression.",
+        "properties": {
+          "level": {
+            "description": "Quality level 1-100 (higher = better quality, larger file).\nDefault: 85",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "optimize": {
+            "description": "Whether to apply additional optimization (e.g., strip metadata, optimize encoding).\nDefault: false",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ImageSize": {
+        "description": "Image size specification - supports absolute dimensions, percentage scale, or presets.",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "Absolute"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "description": "Absolute dimensions in pixels (maintains aspect ratio, fits within bounds).",
+                "properties": {
+                  "max_height": {
+                    "format": "int32",
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "max_width": {
+                    "format": "int32",
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "max_width",
+                  "max_height"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "Percent"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "description": "Percentage scale (e.g., 50 = 50% of original size).",
+                "format": "int32",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "Preset"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "$ref": "#/components/schemas/ImageSizePreset"
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ImageSizePreset": {
+        "description": "Preset image sizes for common scenarios.",
+        "enum": [
+          "thumbnail",
+          "small",
+          "medium",
+          "large",
+          "llm_low",
+          "llm_high",
+          "original"
+        ],
+        "type": "string"
+      },
+      "InlineAgentConfig": {
+        "description": "Inline agent configuration — define model/provider/system_prompt directly in the workflow\nJSON instead of referencing a DB-stored agent by id.",
+        "properties": {
+          "model": {
+            "description": "Model identifier (e.g. \"gpt-4o\", \"claude-3-sonnet-20240229\").",
+            "type": "string"
+          },
+          "provider": {
+            "description": "Provider name (e.g. \"openai\", \"anthropic\", \"gemini\", \"fireworks\").",
+            "type": "string"
+          },
+          "system_prompt": {
+            "description": "Optional system prompt text.",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "provider"
+        ],
+        "type": "object"
+      },
+      "InlineToolSpec": {
+        "description": "An inline tool definition — embedded directly in a workflow step's JSON\nrather than referencing a DB-stored tool by id.",
+        "properties": {
+          "description": {
+            "description": "Optional description (helps the LLM choose when to invoke the tool).",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Display name for the tool (shown to the LLM).",
+            "type": "string"
+          },
+          "spec": {
+            "description": "Tool spec in the same format as `ToolRow.spec`\n(contains `kind`, `input_schema`, and kind-specific fields).",
+            "type": "object"
+          }
+        },
+        "required": [
+          "name",
+          "spec"
+        ],
+        "type": "object"
+      },
+      "JoinKey": {
+        "description": "Join key specification.",
+        "properties": {
+          "left": {
+            "type": "string"
+          },
+          "right": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "left",
+          "right"
+        ],
+        "type": "object"
+      },
+      "JoinType": {
+        "description": "Join types.",
+        "enum": [
+          "inner",
+          "left",
+          "right",
+          "outer",
+          "cross"
+        ],
+        "type": "string"
+      },
+      "KnowledgeOutputFormat": {
+        "description": "Output format for knowledge retrieval results.",
+        "enum": [
+          "Text",
+          "Json",
+          "PromptContext"
+        ],
+        "type": "string"
+      },
+      "KnowledgeSearchMode": {
+        "description": "Search mode for knowledge retrieval. Used by both the workflow `KnowledgeStep`\n(in `workflow::knowledge`) and the data layer's `KnowledgeDb::knowledge_search`\ntrait method, so it lives at the contracts boundary.",
+        "enum": [
+          "vector",
+          "full_text",
+          "hybrid"
+        ],
+        "type": "string"
+      },
+      "KnowledgeStep": {
+        "description": "Step: Vector similarity search against one or more knowledge sources.\n\nEmbeds a query, searches pgvector, and formats results for downstream consumption\n(typically injected into a Prompt step's context). The embedding model is determined\nby the source config, ensuring queries match the stored chunk embeddings.",
+        "properties": {
+          "condition": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Condition"
+              }
+            ],
+            "nullable": true
+          },
+          "excluded_tags": {
+            "description": "Excluded tags — none may be present on matching chunks.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fallback": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Workflow"
+              }
+            ],
+            "nullable": true
+          },
+          "include_metadata": {
+            "description": "Include chunk metadata in output (default: false).",
+            "nullable": true,
+            "type": "boolean"
+          },
+          "knowledge_base_ids": {
+            "description": "Knowledge base IDs — resolved to source_ids at runtime.\nWhen a KB is referenced, ALL its current sources are included in the search.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "metadata_filter": {
+            "description": "Optional JSONB metadata filter (e.g., {\"category\": \"api\"}).",
+            "type": "object"
+          },
+          "name": {
+            "description": "Optional name for the output (referenced by later steps as {{name}}).",
+            "nullable": true,
+            "type": "string"
+          },
+          "output_format": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KnowledgeOutputFormat"
+              }
+            ],
+            "nullable": true
+          },
+          "query_template": {
+            "description": "Template for the search query (supports {{input}}, {{last}}, named outputs).\nFalls back to the current context value ({{last}} or {{input}}) if not set.",
+            "nullable": true,
+            "type": "string"
+          },
+          "required_tags": {
+            "description": "Required tags — all must be present on matching chunks.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rerank": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RerankConfig"
+              }
+            ],
+            "nullable": true
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "retry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RetryPolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "search_mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/KnowledgeSearchMode"
+              }
+            ],
+            "nullable": true
+          },
+          "similarity_threshold": {
+            "description": "Minimum similarity score 0.0-1.0 (default: 0.7).",
+            "format": "float",
+            "nullable": true,
+            "type": "number"
+          },
+          "source_ids": {
+            "description": "Knowledge source IDs to search (supports multi-source queries).",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "top_k": {
+            "description": "Maximum number of results to return (default: 5).",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "vector_weight": {
+            "description": "Weight for vector vs text results in hybrid mode (0.0 = text only, 1.0 = vector only, default: 0.5).",
+            "format": "float",
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "LogicalResourceRef": {
+        "description": "A package-local resource reference that may be unresolved, selector-based,\nor already resolved to a concrete runtime id.",
+        "properties": {
+          "external_id": {
+            "description": "Provider or external system identifier used during resolution.",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Concrete runtime/control-plane id after resolution.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "metadata": {
+            "description": "Optional selector metadata for provider-specific matching.",
+            "type": "object"
+          },
+          "name": {
+            "description": "Human-readable target name used during resolution.",
+            "nullable": true,
+            "type": "string"
+          },
+          "required": {
+            "description": "Whether validation/deploy should fail if this resource cannot resolve.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "LoopCondition": {
+        "description": "Loop condition evaluation.",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "data": {
+                "description": "Template that should evaluate to \"true\" or \"false\".",
+                "properties": {
+                  "template": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "template"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "enum": [
+                  "Template"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "Agent that returns \"true\" or \"false\".",
+                "properties": {
+                  "agent_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "agent_id"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "enum": [
+                  "Agent"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "data"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "LoopStep": {
+        "description": "Step: Loop over items or repeat N times.",
+        "properties": {
+          "body": {
+            "$ref": "#/components/schemas/Workflow"
+          },
+          "name": {
+            "description": "Optional name for the combined output.",
+            "nullable": true,
+            "type": "string"
+          },
+          "reducer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ParallelReducer"
+              }
+            ],
+            "nullable": true
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/LoopStrategy"
+          }
+        },
+        "required": [
+          "strategy",
+          "body"
+        ],
+        "type": "object"
+      },
+      "LoopStrategy": {
+        "description": "Loop iteration strategy.",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "data": {
+                "description": "Iterate over items in an array from a named output or current value.",
+                "properties": {
+                  "index_var": {
+                    "description": "Variable name to use for current index in loop body (default: \"index\").",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "item_var": {
+                    "description": "Variable name to use for current item in loop body (default: \"item\").",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "path": {
+                    "description": "Optional JSON path to extract array from source.",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "source": {
+                    "description": "Source of the array (named output or \"last\" or \"input\").",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "enum": [
+                  "ForEach"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "Repeat N times.",
+                "properties": {
+                  "count": {
+                    "description": "Number of iterations.",
+                    "format": "int32",
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "index_var": {
+                    "description": "Variable name to use for current iteration number (default: \"index\").",
+                    "nullable": true,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "count"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "enum": [
+                  "Repeat"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "While condition is true (evaluated via template or agent).",
+                "properties": {
+                  "condition": {
+                    "$ref": "#/components/schemas/LoopCondition"
+                  },
+                  "max_iterations": {
+                    "description": "Maximum iterations to prevent infinite loops.",
+                    "format": "int32",
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "condition",
+                  "max_iterations"
+                ],
+                "type": "object"
+              },
+              "type": {
+                "enum": [
+                  "While"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "data"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "MapOp": {
+        "description": "Mapping operations for simple deterministic transforms (no LLM call).",
+        "discriminator": {
+          "propertyName": "op"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "op": {
+                "enum": [
+                  "Identity"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "Apply a string template to form the next value.\nVariables like {{input}} and named step outputs may be substituted at runtime.",
+                "properties": {
+                  "template": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "template"
+                ],
+                "type": "object"
+              },
+              "op": {
+                "enum": [
+                  "Template"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "Extract a portion of JSON from a source string using a simple path.\n\n- `from`: Optional name of a prior named output; if omitted, uses the current value.\n- `path`: Dot path with optional array indexes like `data`, `data[0]`, `data[0].field`.",
+                "properties": {
+                  "from": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path"
+                ],
+                "type": "object"
+              },
+              "op": {
+                "enum": [
+                  "JsonExtract"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "data"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "MapStep": {
+        "description": "Step: Apply a mapping operation.",
+        "properties": {
+          "name": {
+            "description": "Optional name for the result (lets later steps reference this output by name).",
+            "nullable": true,
+            "type": "string"
+          },
+          "op": {
+            "$ref": "#/components/schemas/MapOp"
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "type": "object"
+      },
+      "MathOp": {
+        "description": "Arithmetic operators for Math column expressions.",
+        "enum": [
+          "add",
+          "sub",
+          "mul",
+          "div",
+          "mod"
+        ],
+        "type": "string"
+      },
+      "ParallelReducer": {
+        "description": "Reduction strategy for parallel branches.",
+        "discriminator": {
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "Concat"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Build a final string from a template. Branch outputs may be referenced by index or name.",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "Template"
+                ],
+                "type": "string"
+              },
+              "template": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "template",
+              "kind"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "JsonArray"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ParallelStep": {
+        "description": "Step: Run multiple branches in parallel and optionally reduce their results.",
+        "properties": {
+          "branches": {
+            "description": "Branches to run concurrently.",
+            "items": {
+              "$ref": "#/components/schemas/Workflow"
+            },
+            "type": "array"
+          },
+          "reducer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ParallelReducer"
+              }
+            ],
+            "nullable": true
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "streaming_strategy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StreamingStrategy"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "branches"
+        ],
+        "type": "object"
+      },
+      "PivotAggregate": {
+        "description": "Pivot aggregate function.",
+        "enum": [
+          "first",
+          "sum",
+          "mean",
+          "count",
+          "min",
+          "max"
+        ],
+        "type": "string"
+      },
+      "PromptStep": {
+        "description": "Step: Invoke an Agent by id (from Supabase agents table) or via inline config.",
+        "properties": {
+          "agent": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InlineAgentConfig"
+              }
+            ],
+            "nullable": true
+          },
+          "agent_id": {
+            "description": "UUID of the agent to invoke (mutually exclusive with `agent`).",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "exclude_mcp_servers": {
+            "description": "MCP servers to exclude from tool resolution for this step.\nBy default all MCP servers are available; list server names here to opt-out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fallback": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Workflow"
+              }
+            ],
+            "nullable": true
+          },
+          "image_source": {
+            "description": "Optional reference to a named output containing attachments for image URLs.\nLooks up ctx.named_outputs[source], extracts .attachments[] array,\nand includes image URLs in the prompt.",
+            "nullable": true,
+            "type": "string"
+          },
+          "image_urls": {
+            "description": "Optional list of image URLs to include with the prompt (for vision models).\nCan use template variables like \"{{attachment_0}}\" or \"{{optimized_image}}\".",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "type": "array"
+          },
+          "include_attachments": {
+            "description": "If true, automatically include all attachments from the workflow request.",
+            "type": "boolean"
+          },
+          "inline_tools": {
+            "description": "Inline tool definitions — built-in tools configured directly on the step.\nThese are synthesized into ToolRows at execution time (no DB lookup).",
+            "items": {
+              "$ref": "#/components/schemas/InlineToolSpec"
+            },
+            "type": "array"
+          },
+          "input_template": {
+            "description": "Optional input template. If provided, may reference variables or prior step outputs.\nFor example: \"Summarize: {{input}}\" or \"Add 1000 to {{last}}\".",
+            "nullable": true,
+            "type": "string"
+          },
+          "knowledge_source_ids": {
+            "description": "Optional knowledge source IDs for auto-RAG context injection.\nWhen set, the step automatically retrieves relevant chunks and prepends them to the input.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "nullable": true,
+            "type": "array"
+          },
+          "knowledge_top_k": {
+            "description": "Maximum chunks to retrieve for auto-RAG (default: 3).",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "memory": {
+            "description": "Explicit opt-in to use conversation memory for this step (default off).",
+            "nullable": true,
+            "type": "boolean"
+          },
+          "memory_record_original_input": {
+            "description": "If true, record the original user input (ctx.initial_input) instead of step_input when writing to memory.\nThis is useful for the first step (e.g., Intent Classifier) that should record the clean user message.",
+            "type": "boolean"
+          },
+          "memory_window_messages": {
+            "description": "Optional memory window by count of messages to include when memory is enabled.",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "memory_window_tokens": {
+            "description": "Optional memory window by token budget to include when memory is enabled.",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "name": {
+            "description": "Optional name for the result (lets later steps reference this output by name).",
+            "nullable": true,
+            "type": "string"
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "retry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RetryPolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "tool_agent_ids": {
+            "description": "Optional \"agent tools\" represented as agent ids (agent-as-tool).\nWhen provided, the target agent may use these tool agents to fulfill the request.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ReportGenerateData": {
+        "description": "Step: Generate a structured report from a template.\n\nResolves a template (stored or inline), builds a context from workflow state,\nand renders via the restricted Handlebars engine.",
+        "properties": {
+          "context": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Maps template field keys to workflow template expressions.\nEach value is resolved using the standard `apply_template()` engine.",
+            "type": "object"
+          },
+          "filename_template": {
+            "description": "Template for the output filename (supports {{variables}}).",
+            "nullable": true,
+            "type": "string"
+          },
+          "include_attachments": {
+            "description": "Optional: include attachments from referenced step outputs.",
+            "items": {
+              "$ref": "#/components/schemas/AttachmentBinding"
+            },
+            "nullable": true,
+            "type": "array"
+          },
+          "include_content_in_output": {
+            "description": "Whether to include the full rendered content in the step output JSON.\n\nWhen `false`, only metadata (report_id, filename, download_url) is included.\nSet to `false` when `upload_to_storage` is `true` to avoid large payloads\nin webhook callbacks, chat responses, and downstream template variables.\nDefaults to `true` for backward compatibility.",
+            "type": "boolean"
+          },
+          "inline_template": {
+            "description": "Inline template content (Markdown + Handlebars). Mutually exclusive with `template_id`.",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Required human-friendly name for the step output.",
+            "type": "string"
+          },
+          "output_format": {
+            "$ref": "#/components/schemas/ReportOutputFormat"
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "retry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RetryPolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "template_id": {
+            "description": "UUID of a stored report template (mutually exclusive with `inline_template`).",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "template_version": {
+            "description": "Pin to a specific template version. If omitted, uses the latest active version.",
+            "format": "int32",
+            "nullable": true,
+            "type": "integer"
+          },
+          "upload_to_storage": {
+            "description": "Whether to upload the rendered document to tenant storage (Phase 2).",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "ReportOutputFormat": {
+        "description": "Output format for rendered reports.",
+        "enum": [
+          "markdown",
+          "html",
+          "pdf"
+        ],
+        "type": "string"
+      },
+      "RerankConfig": {
+        "description": "Configuration for LLM-based reranking of search results.",
+        "properties": {
+          "model": {
+            "description": "LLM model for scoring relevance (default: \"gpt-4o-mini\").",
+            "type": "string"
+          },
+          "provider": {
+            "description": "LLM provider (default: \"openai\").",
+            "type": "string"
+          },
+          "top_n": {
+            "description": "Number of results to keep after reranking (default: same as top_k).",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RetryPolicy": {
+        "description": "Retry policy for error recovery.",
+        "properties": {
+          "backoff_multiplier": {
+            "description": "Exponential backoff multiplier (e.g., 2.0 means double delay each time).",
+            "format": "double",
+            "nullable": true,
+            "type": "number"
+          },
+          "delay_ms": {
+            "description": "Delay between retries in milliseconds.",
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "max_attempts": {
+            "description": "Maximum number of retry attempts.",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "retry_on_error_pattern": {
+            "description": "Only retry on specific error patterns (regex).",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "max_attempts",
+          "delay_ms"
+        ],
+        "type": "object"
+      },
+      "RouterCase": {
+        "description": "A router case using literal matching.",
+        "properties": {
+          "branch": {
+            "$ref": "#/components/schemas/Workflow"
+          },
+          "when": {
+            "description": "The literal value to match (e.g., \"cow\", \"sheep\", \"dog\").",
+            "type": "string"
+          }
+        },
+        "required": [
+          "when",
+          "branch"
+        ],
+        "type": "object"
+      },
+      "RouterExpressionCase": {
+        "description": "A router case using data expression evaluation.",
+        "properties": {
+          "branch": {
+            "$ref": "#/components/schemas/Workflow"
+          },
+          "condition": {
+            "$ref": "#/components/schemas/ExpressionCondition"
+          },
+          "label": {
+            "description": "Human-readable label for the branch.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "condition",
+          "branch"
+        ],
+        "type": "object"
+      },
+      "RouterRegexCase": {
+        "description": "A router case using regex matching.",
+        "properties": {
+          "branch": {
+            "$ref": "#/components/schemas/Workflow"
+          },
+          "pattern": {
+            "description": "A regular expression pattern to test.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pattern",
+          "branch"
+        ],
+        "type": "object"
+      },
+      "RouterStep": {
+        "description": "Step: Route to one of several branches.\nA router may choose a branch using literal matching, regex, or by delegating\nto a classifier agent.",
+        "properties": {
+          "default": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Workflow"
+              }
+            ],
+            "nullable": true
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "strategy": {
+            "$ref": "#/components/schemas/RouterStrategy"
+          }
+        },
+        "required": [
+          "strategy"
+        ],
+        "type": "object"
+      },
+      "RouterStrategy": {
+        "description": "Strategies for selecting a branch in a router step.",
+        "discriminator": {
+          "propertyName": "strategy"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "data": {
+                "description": "Match the latest value (or a named variable) by literal string equality.",
+                "properties": {
+                  "cases": {
+                    "items": {
+                      "$ref": "#/components/schemas/RouterCase"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "cases"
+                ],
+                "type": "object"
+              },
+              "strategy": {
+                "enum": [
+                  "Literal"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "strategy",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "Match using regular expressions (first match wins).",
+                "properties": {
+                  "cases": {
+                    "items": {
+                      "$ref": "#/components/schemas/RouterRegexCase"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "cases"
+                ],
+                "type": "object"
+              },
+              "strategy": {
+                "enum": [
+                  "Regex"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "strategy",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "Ask a classifier agent to return a label; route based on that label.",
+                "properties": {
+                  "cases": {
+                    "description": "Cases mapping classifier labels to branches.",
+                    "items": {
+                      "$ref": "#/components/schemas/RouterCase"
+                    },
+                    "type": "array"
+                  },
+                  "classifier_agent_id": {
+                    "description": "Classifier agent id to query.",
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "classifier_agent_id",
+                  "cases"
+                ],
+                "type": "object"
+              },
+              "strategy": {
+                "enum": [
+                  "Agent"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "strategy",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "description": "Evaluate data conditions against tabular/JSON output from the previous step.",
+                "properties": {
+                  "cases": {
+                    "items": {
+                      "$ref": "#/components/schemas/RouterExpressionCase"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "cases"
+                ],
+                "type": "object"
+              },
+              "strategy": {
+                "enum": [
+                  "Expression"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "strategy",
+              "data"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "RuntimeTarget": {
+        "description": "Runtime target hint for a governed workflow package.",
+        "enum": [
+          "managed_cloud",
+          "self_hosted",
+          "edge_local"
+        ],
+        "type": "string"
+      },
+      "RuntimeTargetHints": {
+        "description": "Non-authoritative execution target hints. Validation and deployment decide\nwhether a target is actually available for an organization/environment.",
+        "properties": {
+          "allowed_targets": {
+            "items": {
+              "$ref": "#/components/schemas/RuntimeTarget"
+            },
+            "type": "array"
+          },
+          "preferred_target": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RuntimeTarget"
+              }
+            ],
+            "nullable": true
+          },
+          "requires_gpu": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "requires_network": {
+            "nullable": true,
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "SortColumn": {
+        "description": "Sort column specification.",
+        "properties": {
+          "ascending": {
+            "type": "boolean"
+          },
+          "column": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "column"
+        ],
+        "type": "object"
+      },
+      "StepResumePolicy": {
+        "description": "Resume policy for an interrupted top-level workflow step.",
+        "enum": [
+          "auto_rerun",
+          "manual_rerun_required"
+        ],
+        "type": "string"
+      },
+      "StreamingStrategy": {
+        "description": "Streaming strategy for parallel step execution.\nDetermines how branch results are streamed to the client.",
+        "enum": [
+          "as_completed",
+          "ordered",
+          "template_segments",
+          "buffered_complete",
+          "none"
+        ],
+        "type": "string"
+      },
+      "SupervisorStep": {
+        "description": "Step: A meta-agent that dynamically plans and delegates tasks to specialist agents.\n\nThe supervisor agent only gets agent-tools (no DB tools) — clean separation\nof planner vs executor. It dynamically decides which agents to call and when\nthe task is complete.",
+        "properties": {
+          "available_agents": {
+            "description": "Agents available for delegation.",
+            "items": {
+              "$ref": "#/components/schemas/AvailableAgent"
+            },
+            "type": "array"
+          },
+          "exclude_mcp_servers": {
+            "description": "MCP servers to exclude from tool resolution for this step.\nBy default all MCP servers are available; list server names here to opt-out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fallback": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Workflow"
+              }
+            ],
+            "nullable": true
+          },
+          "input_template": {
+            "description": "Optional input template.",
+            "nullable": true,
+            "type": "string"
+          },
+          "max_turns": {
+            "description": "Maximum agentic loop iterations (default: MAX_TOOL_ITERATIONS = 10).",
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "memory": {
+            "description": "Explicit opt-in to conversation memory.",
+            "nullable": true,
+            "type": "boolean"
+          },
+          "memory_record_original_input": {
+            "type": "boolean"
+          },
+          "memory_window_messages": {
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "memory_window_tokens": {
+            "format": "int32",
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "name": {
+            "description": "Optional name for the result.",
+            "nullable": true,
+            "type": "string"
+          },
+          "planning_prompt": {
+            "description": "Optional planning prompt appended to the supervisor agent's system prompt.",
+            "nullable": true,
+            "type": "string"
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "retry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RetryPolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "supervisor_agent_id": {
+            "description": "UUID of the supervisor/planner agent.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supervisor_agent_id",
+          "available_agents"
+        ],
+        "type": "object"
+      },
+      "ToolStep": {
+        "description": "Step: Execute a registered tool (spec-driven, e.g. HTTP).",
+        "properties": {
+          "condition": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Condition"
+              }
+            ],
+            "nullable": true
+          },
+          "fallback": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Workflow"
+              }
+            ],
+            "nullable": true
+          },
+          "name": {
+            "description": "Optional output name (referenced later via {{steps.NAME}})",
+            "nullable": true,
+            "type": "string"
+          },
+          "params_template": {
+            "description": "Optional params template that renders to JSON passed to the tool executor.",
+            "nullable": true,
+            "type": "string"
+          },
+          "resume_policy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StepResumePolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "retry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RetryPolicy"
+              }
+            ],
+            "nullable": true
+          },
+          "tool_id": {
+            "description": "UUID of the tool row in agent_factory.tools",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool_id"
+        ],
+        "type": "object"
+      },
+      "Workflow": {
+        "description": "-------- Dynamic Workflow Types for Agentic Pipelines --------\nA workflow is a sequence of steps that can include prompt calls, mapping, routing,\nand parallel branches.",
+        "properties": {
+          "condition": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Condition"
+              }
+            ],
+            "nullable": true
+          },
+          "name": {
+            "description": "Optional human-friendly name for the workflow (useful when stored in DB).",
+            "nullable": true,
+            "type": "string"
+          },
+          "steps": {
+            "description": "Steps executed in order, unless a router or parallel step alters control flow.\nMay be empty when `workflow_id` is set (steps are loaded from DB during resolution).",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowStep"
+            },
+            "type": "array"
+          },
+          "workflow_id": {
+            "description": "Optional reference to a stored workflow by id.\nWhen set, the workflow's steps are loaded from the DB during resolution.\nCan be used in parallel branches, loop bodies, and router branches.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WorkflowCompatibility": {
+        "description": "Compatibility metadata carried with packages so SDKs, CLIs, and backend\nvalidators can make version decisions before deployment or execution.",
+        "properties": {
+          "compatible_schema_versions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "deprecated_features": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "migration_hint": {
+            "nullable": true,
+            "type": "string"
+          },
+          "min_runtime_version": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WorkflowPackageResources": {
+        "description": "Logical resource maps keyed by package-local names such as `invoice-parser`.",
+        "properties": {
+          "agents": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LogicalResourceRef"
+            },
+            "type": "object"
+          },
+          "credentials": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LogicalResourceRef"
+            },
+            "type": "object"
+          },
+          "policies": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LogicalResourceRef"
+            },
+            "type": "object"
+          },
+          "rulesets": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LogicalResourceRef"
+            },
+            "type": "object"
+          },
+          "systems": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LogicalResourceRef"
+            },
+            "type": "object"
+          },
+          "tools": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LogicalResourceRef"
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "WorkflowStep": {
+        "description": "A single step within a workflow.",
+        "discriminator": {
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/PromptStep"
+              },
+              "kind": {
+                "enum": [
+                  "Prompt"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/MapStep"
+              },
+              "kind": {
+                "enum": [
+                  "Map"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/RouterStep"
+              },
+              "kind": {
+                "enum": [
+                  "Router"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/ParallelStep"
+              },
+              "kind": {
+                "enum": [
+                  "Parallel"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/ToolStep"
+              },
+              "kind": {
+                "enum": [
+                  "Tool"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/LoopStep"
+              },
+              "kind": {
+                "enum": [
+                  "Loop"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/ImageProcessStep"
+              },
+              "kind": {
+                "enum": [
+                  "ImageProcess"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/GenerateStep"
+              },
+              "kind": {
+                "enum": [
+                  "Generate"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/GateStep"
+              },
+              "kind": {
+                "enum": [
+                  "Gate"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/SupervisorStep"
+              },
+              "kind": {
+                "enum": [
+                  "Supervisor"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/FanOutStep"
+              },
+              "kind": {
+                "enum": [
+                  "FanOut"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/KnowledgeStep"
+              },
+              "kind": {
+                "enum": [
+                  "Knowledge"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/DataOpStep"
+              },
+              "kind": {
+                "enum": [
+                  "DataOp"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/ReportGenerateData"
+              },
+              "kind": {
+                "enum": [
+                  "ReportGenerate"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "data"
+            ],
+            "type": "object"
+          }
+        ]
+      }
+    }
+  },
+  "entrypoint": "GovernedWorkflowPackage",
+  "generated_from": "apps/api/src/openapi.rs ApiDoc OpenAPI components via utoipa",
+  "schema_version": "2026-06-03",
+  "title": "RustyFlows Governed Workflow Package Schema"
+}
