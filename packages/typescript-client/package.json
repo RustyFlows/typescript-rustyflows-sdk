@@ -5,7 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "files": [
-    "artifacts/openapi.json",
+    "artifacts",
     "dist",
     "README.md",
     "schemas"

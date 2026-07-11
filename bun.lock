@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "rustyflows-sdk",
+      "name": "rustyflows-typescript-sdk",
       "devDependencies": {
         "@types/node": "^22.10.2",
         "openapi-typescript": "^7.10.1",
@@ -11,7 +11,7 @@
         "vitest": "^3.0.0",
       },
     },
-    "packages/client": {
+    "packages/typescript-client": {
       "name": "@rustyflows/client",
       "version": "0.0.0",
       "dependencies": {
@@ -134,7 +134,7 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.62.2", "", { "os": "win32", "cpu": "x64" }, "sha512-BfzEnDJOt9T8M989/lA37EcJgat01wLRnoi5dQf3QzOH7jzpqTAzdDbVfRljVr5r+jzKqpbHeyOfAaXxAd0PAA=="],
 
-    "@rustyflows/client": ["@rustyflows/client@workspace:packages/client"],
+    "@rustyflows/client": ["@rustyflows/client@workspace:packages/typescript-client"],
 
     "@types/chai": ["@types/chai@5.2.3", "", { "dependencies": { "@types/deep-eql": "*", "assertion-error": "^2.0.1" } }, "sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA=="],
 

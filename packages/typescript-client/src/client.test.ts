@@ -1,6 +1,30 @@
 import { describe, expect, it } from "vitest";
 
 import { createRustyFlowsClient, normalizeRustyFlowsBaseUrl } from "./client";
+import type { components, paths } from "./generated/openapi";
+
+type RequiredTransportPath =
+  | "/api/workflows/preflight"
+  | "/api/workflows/resume"
+  | "/api/workflows/gates/{gate_id}/resolve"
+  | "/api/analytics/runs/{run_id}/checkpoints"
+  | "/api/control-plane/policies"
+  | "/api/control-plane/rulesets"
+  | "/api/control-plane/systems"
+  | "/api/control-plane/credentials"
+  | "/api/control-plane/platform-api-keys"
+  | "/api/control-plane/service-accounts"
+  | "/api/control-plane/usage/billing-events"
+  | "/api/control-plane/audit-logs"
+  | "/api/control-plane/subscription";
+
+type MissingTransportPath = Exclude<RequiredTransportPath, keyof paths>;
+const requiredTransportPathsPresent: MissingTransportPath extends never ? true : never = true;
+
+type WorkflowRunRequest = components["schemas"]["WorkflowRunRequest"];
+const structuredWorkflowInput: WorkflowRunRequest["input"] = {
+  customer_id: "customer-123"
+};
 
 describe("normalizeRustyFlowsBaseUrl", () => {
   it("trims whitespace and trailing slashes", () => {
@@ -15,6 +39,11 @@ describe("normalizeRustyFlowsBaseUrl", () => {
 });
 
 describe("createRustyFlowsClient", () => {
+  it("keeps the required SDK transport paths and structured input contract", () => {
+    expect(requiredTransportPathsPresent).toBe(true);
+    expect(structuredWorkflowInput).toEqual({ customer_id: "customer-123" });
+  });
+
   it("adds auth and organization headers to typed requests", async () => {
     const requests: Request[] = [];
     const fetchMock: typeof fetch = async (input, init) => {
