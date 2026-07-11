@@ -1,0 +1,10 @@
+{
+  "source_repository": "https://github.com/The-Jolly-Traveller/rustyflows-app.git",
+  "source_commit": "fe801211ba15939dd2cecae4cf2293b8d4c36190",
+  "source_dirty": false,
+  "artifacts": {
+    "artifacts/openapi.json": "sha256:4d0073eff6abf4aa4ac6c762b3f20918a03f5330e77ac12bf0a997a80af5fa28",
+    "schemas/workflow-ir.schema.json": "sha256:0ad67c3183141ac95a16e5af5fd3d3c0b82e6342457c82011c4873f09ea9277d",
+    "schemas/governed-workflow-package.schema.json": "sha256:9c44936866ba1b369c466b0c94b4bf5a1fd8688f8c1f07dabb5bfbed202f8165"
+  }
+}
