@@ -1,33 +1,38 @@
-/models
-/sdk/models/errors
-/sdk/types
-/node_modules
-/examples/node_modules
+# Dependencies
+node_modules/
+examples/node_modules
+
+# Build output
+/dist
 /lib
-/sdk
-/funcs
-/react-query
-/mcp-server
-/hooks
-/index.*
-/core.*
-/bin
 /cjs
 /esm
-/dist
+/bin
+
+# TypeScript
 /.tsbuildinfo
-/.eslintcache
-/.tshy
-/.tshy-*
-/__tests__
-**/.speakeasy/temp/
-**/.speakeasy/logs/
-/.speakeasy/reports
+*.tsbuildinfo
+
+# IDE
+.eslintcache
+.DS_Store
+*.local.ts
+
+# Logs
+*.log
+
+# Environment
 .env
 .env.local
 .env.*.local
-node_modules/
-dist/
-*.log
-.DS_Store
-*.local.ts
+
+# Internal/Private files - DO NOT add these to public repo
+openapi.workflows.json
+openapi.workflows.simple.json
+overlay.workflows.yaml
+gen.yaml
+*.tgz
+.speakeasy/
+
+# Test
+/__tests__
