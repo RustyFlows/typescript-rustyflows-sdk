@@ -1,7 +1,10 @@
 {
-  "name": "rustyflows",
-  "version": "0.2.0",
+  "name": "@The-Jolly-Traveller/rustyflows-ts",
+  "version": "0.1.0",
   "author": "RustyFlows",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "type": "module",
   "tshy": {
     "sourceDialects": [
