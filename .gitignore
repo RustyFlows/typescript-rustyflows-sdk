@@ -8,6 +8,7 @@ examples/node_modules
 /cjs
 /esm
 /bin
+/.tshy
 
 # TypeScript
 /.tsbuildinfo
