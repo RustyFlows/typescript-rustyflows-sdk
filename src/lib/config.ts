@@ -41,5 +41,5 @@ export const SDK_METADATA = {
   openapiDocVersion: "0.1.0",
   sdkVersion: "0.2.0",
   genVersion: "2.933.0",
-  userAgent: "speakeasy-sdk/typescript 0.2.0 2.933.0 0.1.0 rustyflows",
+  userAgent: "rustyflows-sdk/typescript 0.2.0 0.1.0",
 } as const;
