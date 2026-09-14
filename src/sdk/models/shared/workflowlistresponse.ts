@@ -1,0 +1,36 @@
+import * as z from "zod/v3";
+import { safeParse } from "../../../lib/schemas.js";
+import { Result as SafeParseResult } from "../../types/fp.js";
+import { SDKValidationError } from "../errors/sdkvalidationerror.js";
+import {
+  WorkflowListRow,
+  WorkflowListRow$inboundSchema,
+} from "./workflowlistrow.js";
+
+/**
+ * Paginated list of workflows.
+ */
+export type WorkflowListResponse = {
+  total: number;
+  workflows: Array<WorkflowListRow>;
+};
+
+/** @internal */
+export const WorkflowListResponse$inboundSchema: z.ZodType<
+  WorkflowListResponse,
+  z.ZodTypeDef,
+  unknown
+> = z.object({
+  total: z.number().int(),
+  workflows: z.array(WorkflowListRow$inboundSchema),
+});
+
+export function workflowListResponseFromJSON(
+  jsonString: string,
+): SafeParseResult<WorkflowListResponse, SDKValidationError> {
+  return safeParse(
+    jsonString,
+    (x) => WorkflowListResponse$inboundSchema.parse(JSON.parse(x)),
+    `Failed to parse 'WorkflowListResponse' from JSON`,
+  );
+}

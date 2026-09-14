@@ -1,0 +1,28 @@
+import * as z from "zod/v3";
+import { remap as remap$ } from "../../../lib/primitives.js";
+
+export type Security = {
+  bearerAuth: string;
+};
+
+/** @internal */
+export type Security$Outbound = {
+  bearer_auth: string;
+};
+
+/** @internal */
+export const Security$outboundSchema: z.ZodType<
+  Security$Outbound,
+  z.ZodTypeDef,
+  Security
+> = z.object({
+  bearerAuth: z.string(),
+}).transform((v) => {
+  return remap$(v, {
+    bearerAuth: "bearer_auth",
+  });
+});
+
+export function securityToJSON(security: Security): string {
+  return JSON.stringify(Security$outboundSchema.parse(security));
+}

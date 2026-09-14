@@ -1,0 +1,24 @@
+import * as z from "zod/v3";
+import { safeParse } from "../../../lib/schemas.js";
+import { Result as SafeParseResult } from "../../types/fp.js";
+import { SDKValidationError } from "../errors/sdkvalidationerror.js";
+import * as shared from "../shared/index.js";
+
+export type WorkflowResumeResponse = shared.ApiError | any;
+
+/** @internal */
+export const WorkflowResumeResponse$inboundSchema: z.ZodType<
+  WorkflowResumeResponse,
+  z.ZodTypeDef,
+  unknown
+> = z.union([shared.ApiError$inboundSchema, z.any()]);
+
+export function workflowResumeResponseFromJSON(
+  jsonString: string,
+): SafeParseResult<WorkflowResumeResponse, SDKValidationError> {
+  return safeParse(
+    jsonString,
+    (x) => WorkflowResumeResponse$inboundSchema.parse(JSON.parse(x)),
+    `Failed to parse 'WorkflowResumeResponse' from JSON`,
+  );
+}

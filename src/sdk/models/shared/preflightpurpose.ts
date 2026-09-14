@@ -1,0 +1,13 @@
+import * as z from "zod/v3";
+import { ClosedEnum } from "../../types/enums.js";
+
+export const PreflightPurpose = {
+  Save: "save",
+  Run: "run",
+} as const;
+export type PreflightPurpose = ClosedEnum<typeof PreflightPurpose>;
+
+/** @internal */
+export const PreflightPurpose$outboundSchema: z.ZodNativeEnum<
+  typeof PreflightPurpose
+> = z.nativeEnum(PreflightPurpose);

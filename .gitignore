@@ -1,5 +1,39 @@
+# Dependencies
 node_modules/
-dist/
-.turbo/
+examples/node_modules
+
+# Build output
+/dist
+/lib
+/cjs
+/esm
+/bin
+/.tshy
+
+# TypeScript
+/.tsbuildinfo
+*.tsbuildinfo
+
+# IDE
+.eslintcache
 .DS_Store
+*.local.ts
+
+# Logs
 *.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Internal/Private files - DO NOT add these to public repo
+openapi.workflows.json
+openapi.workflows.simple.json
+overlay.workflows.yaml
+gen.yaml
+*.tgz
+.speakeasy/
+
+# Test
+/__tests__

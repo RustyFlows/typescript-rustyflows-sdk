@@ -1,0 +1,84 @@
+import * as z from "zod/v3";
+import { remap as remap$ } from "../../../lib/primitives.js";
+
+/**
+ * Partial update payload for workflows (all fields optional).
+ */
+export type WorkflowUpdate = {
+  authConfigId?: string | null | undefined;
+  boundaryConfig?: any | null | undefined;
+  boundaryType?: string | null | undefined;
+  defaultAuthConfigId?: string | null | undefined;
+  defaultDatabaseConfigId?: string | null | undefined;
+  defaultStorageConfigId?: string | null | undefined;
+  defaultTestAccountId?: string | null | undefined;
+  definition?: any | null | undefined;
+  description?: string | null | undefined;
+  executionScope?: string | null | undefined;
+  identityStrategy?: string | null | undefined;
+  name?: string | null | undefined;
+  nodePositions?: any | null | undefined;
+  systemId?: string | null | undefined;
+  visualNodes?: any | null | undefined;
+};
+
+/** @internal */
+export type WorkflowUpdate$Outbound = {
+  auth_config_id?: string | null | undefined;
+  boundary_config?: any | null | undefined;
+  boundary_type?: string | null | undefined;
+  default_auth_config_id?: string | null | undefined;
+  default_database_config_id?: string | null | undefined;
+  default_storage_config_id?: string | null | undefined;
+  default_test_account_id?: string | null | undefined;
+  definition?: any | null | undefined;
+  description?: string | null | undefined;
+  execution_scope?: string | null | undefined;
+  identity_strategy?: string | null | undefined;
+  name?: string | null | undefined;
+  node_positions?: any | null | undefined;
+  system_id?: string | null | undefined;
+  visual_nodes?: any | null | undefined;
+};
+
+/** @internal */
+export const WorkflowUpdate$outboundSchema: z.ZodType<
+  WorkflowUpdate$Outbound,
+  z.ZodTypeDef,
+  WorkflowUpdate
+> = z.object({
+  authConfigId: z.nullable(z.string()).optional(),
+  boundaryConfig: z.nullable(z.any()).optional(),
+  boundaryType: z.nullable(z.string()).optional(),
+  defaultAuthConfigId: z.nullable(z.string()).optional(),
+  defaultDatabaseConfigId: z.nullable(z.string()).optional(),
+  defaultStorageConfigId: z.nullable(z.string()).optional(),
+  defaultTestAccountId: z.nullable(z.string()).optional(),
+  definition: z.nullable(z.any()).optional(),
+  description: z.nullable(z.string()).optional(),
+  executionScope: z.nullable(z.string()).optional(),
+  identityStrategy: z.nullable(z.string()).optional(),
+  name: z.nullable(z.string()).optional(),
+  nodePositions: z.nullable(z.any()).optional(),
+  systemId: z.nullable(z.string()).optional(),
+  visualNodes: z.nullable(z.any()).optional(),
+}).transform((v) => {
+  return remap$(v, {
+    authConfigId: "auth_config_id",
+    boundaryConfig: "boundary_config",
+    boundaryType: "boundary_type",
+    defaultAuthConfigId: "default_auth_config_id",
+    defaultDatabaseConfigId: "default_database_config_id",
+    defaultStorageConfigId: "default_storage_config_id",
+    defaultTestAccountId: "default_test_account_id",
+    executionScope: "execution_scope",
+    identityStrategy: "identity_strategy",
+    nodePositions: "node_positions",
+    systemId: "system_id",
+    visualNodes: "visual_nodes",
+  });
+});
+
+export function workflowUpdateToJSON(workflowUpdate: WorkflowUpdate): string {
+  return JSON.stringify(WorkflowUpdate$outboundSchema.parse(workflowUpdate));
+}

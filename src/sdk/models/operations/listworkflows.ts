@@ -1,0 +1,70 @@
+import * as z from "zod/v3";
+import { safeParse } from "../../../lib/schemas.js";
+import { Result as SafeParseResult } from "../../types/fp.js";
+import { SDKValidationError } from "../errors/sdkvalidationerror.js";
+import * as shared from "../shared/index.js";
+
+export type ListWorkflowsRequest = {
+  /**
+   * Maximum number of workflows to return (default: 20).
+   */
+  limit?: number | null | undefined;
+  /**
+   * Number of workflows to skip for pagination (default: 0).
+   */
+  offset?: number | null | undefined;
+  /**
+   * Optional search query to filter workflows by name.
+   */
+  q?: string | null | undefined;
+};
+
+export type ListWorkflowsResponse =
+  | shared.WorkflowListResponse
+  | shared.ApiError;
+
+/** @internal */
+export type ListWorkflowsRequest$Outbound = {
+  limit?: number | null | undefined;
+  offset?: number | null | undefined;
+  q?: string | null | undefined;
+};
+
+/** @internal */
+export const ListWorkflowsRequest$outboundSchema: z.ZodType<
+  ListWorkflowsRequest$Outbound,
+  z.ZodTypeDef,
+  ListWorkflowsRequest
+> = z.object({
+  limit: z.nullable(z.number().int()).optional(),
+  offset: z.nullable(z.number().int()).optional(),
+  q: z.nullable(z.string()).optional(),
+});
+
+export function listWorkflowsRequestToJSON(
+  listWorkflowsRequest: ListWorkflowsRequest,
+): string {
+  return JSON.stringify(
+    ListWorkflowsRequest$outboundSchema.parse(listWorkflowsRequest),
+  );
+}
+
+/** @internal */
+export const ListWorkflowsResponse$inboundSchema: z.ZodType<
+  ListWorkflowsResponse,
+  z.ZodTypeDef,
+  unknown
+> = z.union([
+  shared.WorkflowListResponse$inboundSchema,
+  shared.ApiError$inboundSchema,
+]);
+
+export function listWorkflowsResponseFromJSON(
+  jsonString: string,
+): SafeParseResult<ListWorkflowsResponse, SDKValidationError> {
+  return safeParse(
+    jsonString,
+    (x) => ListWorkflowsResponse$inboundSchema.parse(JSON.parse(x)),
+    `Failed to parse 'ListWorkflowsResponse' from JSON`,
+  );
+}

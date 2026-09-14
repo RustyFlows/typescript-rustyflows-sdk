@@ -1,0 +1,35 @@
+import { workflowGatesGateList } from "../funcs/workflowGatesGateList.js";
+import { workflowGatesGateResolve } from "../funcs/workflowGatesGateResolve.js";
+import { ClientSDK, RequestOptions } from "../lib/sdks.js";
+import * as operations from "./models/operations/index.js";
+import { unwrapAsync } from "./types/fp.js";
+
+export class WorkflowGates extends ClientSDK {
+  /**
+   * List workflow gates.
+   *
+   * @remarks
+   * GET /api/workflows/gates?run_id={uuid}&status={status}
+   */
+  async gateList(
+    request?: operations.GateListRequest | undefined,
+    options?: RequestOptions,
+  ): Promise<operations.GateListResponse> {
+    return unwrapAsync(workflowGatesGateList(
+      this,
+      request,
+      options,
+    ));
+  }
+
+  async gateResolve(
+    request: operations.GateResolveRequest,
+    options?: RequestOptions,
+  ): Promise<operations.GateResolveResponse> {
+    return unwrapAsync(workflowGatesGateResolve(
+      this,
+      request,
+      options,
+    ));
+  }
+}

@@ -1,0 +1,18 @@
+import { workflowValidationWorkflowPreflight } from "../funcs/workflowValidationWorkflowPreflight.js";
+import { ClientSDK, RequestOptions } from "../lib/sdks.js";
+import * as operations from "./models/operations/index.js";
+import * as shared from "./models/shared/index.js";
+import { unwrapAsync } from "./types/fp.js";
+
+export class WorkflowValidation extends ClientSDK {
+  async workflowPreflight(
+    request: shared.WorkflowPreflightRequest,
+    options?: RequestOptions,
+  ): Promise<operations.WorkflowPreflightResponse> {
+    return unwrapAsync(workflowValidationWorkflowPreflight(
+      this,
+      request,
+      options,
+    ));
+  }
+}

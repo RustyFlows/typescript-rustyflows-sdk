@@ -1,0 +1,62 @@
+import * as z from "zod/v3";
+import { remap as remap$ } from "../../../lib/primitives.js";
+
+/**
+ * Public gate-resolution payload. Authentication is supplied by headers.
+ */
+export type GateResolveRequest = {
+  /**
+   * Optional attachments exposed to downstream steps.
+   */
+  attachments?: Array<any> | null | undefined;
+  /**
+   * Boolean for approval gates, string for input/select gates.
+   */
+  response?: any | undefined;
+  /**
+   * Resume workflow execution after resolving the gate. Defaults to true.
+   */
+  resume?: boolean | null | undefined;
+  /**
+   * Stream resumed workflow output as SSE. Defaults to false.
+   */
+  stream?: boolean | null | undefined;
+  /**
+   * Original System identity used to select the same runtime backend.
+   */
+  systemId?: string | null | undefined;
+};
+
+/** @internal */
+export type GateResolveRequest$Outbound = {
+  attachments?: Array<any> | null | undefined;
+  response?: any | undefined;
+  resume?: boolean | null | undefined;
+  stream?: boolean | null | undefined;
+  system_id?: string | null | undefined;
+};
+
+/** @internal */
+export const GateResolveRequest$outboundSchema: z.ZodType<
+  GateResolveRequest$Outbound,
+  z.ZodTypeDef,
+  GateResolveRequest
+> = z.object({
+  attachments: z.nullable(z.array(z.any())).optional(),
+  response: z.any().optional(),
+  resume: z.nullable(z.boolean()).optional(),
+  stream: z.nullable(z.boolean()).optional(),
+  systemId: z.nullable(z.string()).optional(),
+}).transform((v) => {
+  return remap$(v, {
+    systemId: "system_id",
+  });
+});
+
+export function gateResolveRequestToJSON(
+  gateResolveRequest: GateResolveRequest,
+): string {
+  return JSON.stringify(
+    GateResolveRequest$outboundSchema.parse(gateResolveRequest),
+  );
+}
