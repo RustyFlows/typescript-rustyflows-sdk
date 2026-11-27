@@ -1,18 +1,8 @@
 {
-  "name": "rustyflows-examples",
-  "version": "1.0.0",
+  "name": "rustyflows-source-examples",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build:parent": "cd .. && npm i && npm run build && cd -",
-    "build:examples": "npm i",
-    "build": "npm run build:parent && npm run build:examples"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "dotenv": "^16.4.5",
-    "tsx": "^4.19.2"
-  },
-  "dependencies": {
-    "rustyflows": "file:.."
+    "run": "bun runWorkflow.ts"
   }
 }

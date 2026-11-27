@@ -1,125 +1,26 @@
 {
-  "name": "@The-Jolly-Traveller/rustyflows-ts",
-  "version": "0.1.0",
-  "author": "RustyFlows",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
+  "name": "rustyflows-typescript-sdk",
+  "private": true,
   "type": "module",
-  "tshy": {
-    "sourceDialects": [
-      "rustyflows/source"
-    ],
-    "exports": {
-      ".": "./src/index.ts",
-      "./package.json": "./package.json",
-      "./sdk/types": "./src/sdk/types/index.ts",
-      "./sdk/models/errors": "./src/sdk/models/errors/index.ts",
-      "./sdk/models/shared": "./src/sdk/models/shared/index.ts",
-      "./sdk/models/operations": "./src/sdk/models/operations/index.ts",
-      "./*.js": "./src/*.ts",
-      "./*": "./src/*.ts"
-    }
-  },
-  "sideEffects": false,
+  "packageManager": "bun@1.3.6",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "lint": "eslint --cache --max-warnings=0 src",
-    "build": "tshy",
-    "prepublishOnly": "npm run build"
+    "build": "bun --filter '*' build",
+    "check:source": "bun packages/typescript-client/scripts/sync-artifacts.mjs --check",
+    "check:source:compatible": "bun packages/typescript-client/scripts/sync-artifacts.mjs --check --compatible-source",
+    "check:generated": "bun --filter '@rustyflows/client' check:generated && test -z \"$(git status --porcelain --untracked-files=all -- packages/typescript-client/src/generated)\"",
+    "pack:dry-run": "bun --filter '@rustyflows/client' pack:dry-run",
+    "generate": "bun --filter '@rustyflows/client' generate",
+    "sync:artifacts": "bun packages/typescript-client/scripts/sync-artifacts.mjs",
+    "test": "bun --filter '*' test",
+    "typecheck": "bun --filter '*' typecheck && tsc -p examples/tsconfig.json --noEmit"
   },
-  "peerDependencies": {},
   "devDependencies": {
-    "@eslint/js": "^9.26.0",
-    "eslint": "^9.26.0",
-    "globals": "^15.14.0",
-    "tshy": "^3.3.2",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.26.0"
-  },
-  "dependencies": {
-    "zod": "^3.25.0 || ^4.0.0"
-  },
-  "exports": {
-    ".": {
-      "import": {
-        "rustyflows/source": "./src/index.ts",
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      },
-      "require": {
-        "types": "./dist/commonjs/index.d.ts",
-        "default": "./dist/commonjs/index.js"
-      }
-    },
-    "./package.json": "./package.json",
-    "./sdk/types": {
-      "import": {
-        "rustyflows/source": "./src/sdk/types/index.ts",
-        "types": "./dist/esm/sdk/types/index.d.ts",
-        "default": "./dist/esm/sdk/types/index.js"
-      },
-      "require": {
-        "types": "./dist/commonjs/sdk/types/index.d.ts",
-        "default": "./dist/commonjs/sdk/types/index.js"
-      }
-    },
-    "./sdk/models/errors": {
-      "import": {
-        "rustyflows/source": "./src/sdk/models/errors/index.ts",
-        "types": "./dist/esm/sdk/models/errors/index.d.ts",
-        "default": "./dist/esm/sdk/models/errors/index.js"
-      },
-      "require": {
-        "types": "./dist/commonjs/sdk/models/errors/index.d.ts",
-        "default": "./dist/commonjs/sdk/models/errors/index.js"
-      }
-    },
-    "./sdk/models/shared": {
-      "import": {
-        "rustyflows/source": "./src/sdk/models/shared/index.ts",
-        "types": "./dist/esm/sdk/models/shared/index.d.ts",
-        "default": "./dist/esm/sdk/models/shared/index.js"
-      },
-      "require": {
-        "types": "./dist/commonjs/sdk/models/shared/index.d.ts",
-        "default": "./dist/commonjs/sdk/models/shared/index.js"
-      }
-    },
-    "./sdk/models/operations": {
-      "import": {
-        "rustyflows/source": "./src/sdk/models/operations/index.ts",
-        "types": "./dist/esm/sdk/models/operations/index.d.ts",
-        "default": "./dist/esm/sdk/models/operations/index.js"
-      },
-      "require": {
-        "types": "./dist/commonjs/sdk/models/operations/index.d.ts",
-        "default": "./dist/commonjs/sdk/models/operations/index.js"
-      }
-    },
-    "./*.js": {
-      "import": {
-        "rustyflows/source": "./src/*.ts",
-        "types": "./dist/esm/*.d.ts",
-        "default": "./dist/esm/*.js"
-      },
-      "require": {
-        "types": "./dist/commonjs/*.d.ts",
-        "default": "./dist/commonjs/*.js"
-      }
-    },
-    "./*": {
-      "import": {
-        "rustyflows/source": "./src/*.ts",
-        "types": "./dist/esm/*.d.ts",
-        "default": "./dist/esm/*.js"
-      },
-      "require": {
-        "types": "./dist/commonjs/*.d.ts",
-        "default": "./dist/commonjs/*.js"
-      }
-    }
-  },
-  "main": "./dist/commonjs/index.js",
-  "types": "./dist/commonjs/index.d.ts",
-  "module": "./dist/esm/index.js"
+    "@types/node": "^22.10.2",
+    "openapi-typescript": "^7.10.1",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  }
 }
