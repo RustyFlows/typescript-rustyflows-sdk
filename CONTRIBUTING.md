@@ -33,6 +33,9 @@ No npm release is authorized by implementation changes or a package dry run.
   `packages/typescript-client/artifacts/source.json`; CI rejects dirty provenance.
   Generate and synchronize final artifacts from a clean, committed canonical app
   checkout. Missing source or any source/generated mismatch fails the gate.
+  SSH and HTTPS source clones are accepted, but synchronization always records
+  `https://github.com/RustyFlows/rustyflows-app.git`. Resynchronize an older
+  noncanonical manifest; local provenance checks enforce the same URL as CI.
 - Provision a dedicated private GitHub App with **Contents: read** (plus GitHub's
   implicit metadata read), no other permissions or subscribed events, installed
   on **RustyFlows/rustyflows-app only**. Store its App ID in the SDK repository

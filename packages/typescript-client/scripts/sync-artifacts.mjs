@@ -66,7 +66,8 @@ const repositoryIdentity = (url) => url
   .replace(/\/$/, "")
   .replace(/\.git$/, "")
   .toLowerCase();
-const intendedRepository = "https://github.com/rustyflows/rustyflows-app";
+const canonicalRepository = "https://github.com/RustyFlows/rustyflows-app.git";
+const intendedRepository = repositoryIdentity(canonicalRepository);
 if (repositoryIdentity(sourceRemote) !== intendedRepository) {
   throw new Error("Selected source is not the canonical RustyFlows/rustyflows-app repository");
 }
@@ -77,7 +78,7 @@ if (process.env.CI && sourceStatus.length > 0) {
 const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
 const manifestPath = resolve(packageDir, "artifacts/source.json");
 const pinned = check ? JSON.parse(readFileSync(manifestPath, "utf8")) : undefined;
-if (check && (repositoryIdentity(pinned.source_repository ?? "") !== intendedRepository
+if (check && (pinned.source_repository !== canonicalRepository
   || !/^[0-9a-f]{40}$/.test(pinned.source_commit ?? "")
   || typeof pinned.source_dirty !== "boolean"
   || (process.env.CI && pinned.source_dirty)
@@ -108,7 +109,7 @@ for (const [source, target] of copies) {
   console.log(`${source} -> ${target}`);
 }
 const manifest = {
-  source_repository: sourceRemote,
+  source_repository: canonicalRepository,
   source_commit: sourceCommit,
   source_dirty: sourceStatus.length > 0,
   artifacts: Object.fromEntries(

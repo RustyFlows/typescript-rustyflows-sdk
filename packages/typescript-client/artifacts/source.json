@@ -1,6 +1,6 @@
 {
   "source_repository": "https://github.com/RustyFlows/rustyflows-app.git",
-  "source_commit": "a71fc43fa75f0d6cdf588b65d98cd81814e15dc1",
+  "source_commit": "7a197d7029bb7c3a6b9f919a40e4ceb89853ccf1",
   "source_dirty": false,
   "artifacts": {
     "artifacts/openapi.json": "sha256:ee1d3d6834e6b41efe8bc8f059fd12414fc4a4caab5356a4c66a593e87405ef4",
