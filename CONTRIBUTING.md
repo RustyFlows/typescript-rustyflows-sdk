@@ -46,11 +46,11 @@ No npm release is authorized by implementation changes or a package dry run.
   credentials. The SDK-scoped `GITHUB_TOKEN` remains **Contents: read** and cannot
   read the private app repository. Missing App credentials fail before checkout;
   there is no deploy-key, personal-token, `dev` or copied-artifact fallback.
-- The app's `task check-sdk-compatibility` compares current Rust-generated
-  OpenAPI/IR/web artifact bytes with an explicit SDK checkout, independent of
-  unrelated app commits. App-CI checkout wiring is a separate integration
-  prerequisite: it must pin a full reviewed SDK SHA in `SDK_SOURCE_COMMIT`, not
-  assume the SDK repository's legacy `dev` branch contains this cutover.
+- App CI checks its Rust/OpenAPI/web/IR drift without an unpublished
+  cross-repository SDK pin. SDK CI checks out its exact pinned app source and
+  runs the complete source-to-SDK compatibility gate there. Use the same
+  explicit local compatibility task for a coordinated consumer cutover; a
+  mutable SDK branch or global pin is not a replacement for reviewed artifacts.
 - From the intended app worktree, use the canonical wrappers with an absolute
   `SDK_DIR`: `task sync-sdk-artifacts SDK_DIR=/absolute/sdk`,
   `task generate-sdk SDK_DIR=/absolute/sdk`, then
