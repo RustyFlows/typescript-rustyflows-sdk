@@ -1,46 +1,47 @@
-import { rustyflows } from '../rustyflows';
+import {
+  createRustyFlowsClient,
+  RustyFlowsApiError,
+  type WorkflowRunRequest
+} from "../packages/typescript-client/src/index.js";
 
-// Initialize the client
-const client = new rustyflows({
-  BASE: 'http://localhost:8080',
-  TOKEN: 'rf_your_bearer_token_here',
-  HEADERS: {
-    'X-Organization-Id': 'your-org-uuid',
-  },
+const required = (name: string): string => {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name} before running this server-side example`);
+  return value;
+};
+
+const client = createRustyFlowsClient({
+  baseUrl: required("RUSTYFLOWS_API_URL"),
+  token: required("RUSTYFLOWS_TOKEN"),
+  organizationId: required("RUSTYFLOWS_ORGANIZATION_ID")
 });
+// Persist this key with the logical submission. Reuse it after a lost response;
+// do not generate a new key merely because this process was restarted.
+const key = required("RUSTYFLOWS_IDEMPOTENCY_KEY");
+const body = {
+  workflow_id: required("RUSTYFLOWS_WORKFLOW_ID"),
+  input: { message: "Hello from the server-side SDK example" }
+} satisfies WorkflowRunRequest;
 
-async function main() {
-  try {
-    // 1. List workflows
-    console.log('=== List Workflows ===');
-    const list = await client.workflows.listWorkflows({ limit: 20 });
-    console.log(`Found ${list.workflows?.length ?? 0} workflows`);
-    list.workflows?.forEach(w => console.log(`  - ${w.name} (${w.id})`));
-
-    if (!list.workflows?.length) return;
-
-    // 2. Get a single workflow
-    const firstId = list.workflows[0].id;
-    console.log(`\n=== Get Workflow ${firstId} ===');
-    const workflow = await client.workflows.getWorkflow({ id: firstId });
-    console.log(`Name: ${workflow.name}`);
-    console.log(`Version: ${workflow.version}`);
-
-    // 3. Run a workflow
-    console.log('\n=== Run Workflow ===');
-    const runResult = await client.workflowExecution.workflowRun({
-      requestBody: {
-        workflow: workflow,
-        input: { message: 'Hello from SDK' },
-        environment_slug: 'dev',
-      },
-    });
-    console.log('Run result:', runResult);
-
-  } catch (err: any) {
-    console.error('Error:', err.message);
-    if (err.response) console.error('Response:', err.response);
+try {
+  const { data, response } = await client.POST("/api/workflows/run", {
+    params: { header: { "Idempotency-Key": key } },
+    body
+  });
+  if ((response.status !== 200 && response.status !== 202) || data === undefined) {
+    throw new Error("The run endpoint returned no supported typed success outcome");
+  }
+  // 202 means durable waiting, not a completed workflow. Inspect recorded state
+  // before responding to an interaction; never replay start to reconnect.
+  console.log(response.status === 202 ? "Run waiting for input" : "Run completed");
+  console.log(data);
+} catch (error) {
+  if (error instanceof RustyFlowsApiError) {
+    console.error(`RustyFlows rejected the run: ${error.status} ${error.code}: ${error.message}`);
+    process.exitCode = 1;
+  } else {
+    // A lost response is ambiguous: retain the original key/body and inspect the
+    // recorded run or retry that same submission within its 24-hour retention.
+    throw error;
   }
 }
-
-main();

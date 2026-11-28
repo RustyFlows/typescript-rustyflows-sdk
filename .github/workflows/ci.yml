@@ -1,0 +1,96 @@
+name: SDK CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  typescript-client:
+    name: TypeScript client
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          path: sdk
+          persist-credentials: false
+
+      - name: Require immutable canonical app provenance
+        id: source
+        working-directory: sdk
+        run: |
+          set -euo pipefail
+          manifest=packages/typescript-client/artifacts/source.json
+          jq -e '.source_dirty == false and (.source_repository == "https://github.com/RustyFlows/rustyflows-app.git") and (.source_commit | test("^[0-9a-f]{40}$"))' "$manifest" >/dev/null
+          echo "commit=$(jq -r .source_commit "$manifest")" >> "$GITHUB_OUTPUT"
+
+      - name: Require dedicated app-source GitHub App credentials
+        env:
+          SOURCE_APP_ID: ${{ vars.RUSTYFLOWS_APP_SOURCE_APP_ID }}
+          SOURCE_APP_PRIVATE_KEY: ${{ secrets.RUSTYFLOWS_APP_SOURCE_APP_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SOURCE_APP_ID" ] || [ -z "$SOURCE_APP_PRIVATE_KEY" ]; then
+            echo 'Configure the dedicated Contents:read GitHub App installed only on RustyFlows/rustyflows-app: SDK variable RUSTYFLOWS_APP_SOURCE_APP_ID and secret RUSTYFLOWS_APP_SOURCE_APP_PRIVATE_KEY.' >&2
+            exit 1
+          fi
+
+      - name: Mint repository-scoped read-only source token
+        id: source-auth
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ vars.RUSTYFLOWS_APP_SOURCE_APP_ID }}
+          private-key: ${{ secrets.RUSTYFLOWS_APP_SOURCE_APP_PRIVATE_KEY }}
+          owner: RustyFlows
+          repositories: rustyflows-app
+          permission-contents: read
+
+      # No fallback to dev or copied artifacts. Private-source access must be
+      # provisioned by the operator; this read-only checkout fails without it.
+      - name: Check out pinned app source
+        uses: actions/checkout@v4
+        with:
+          repository: RustyFlows/rustyflows-app
+          token: ${{ steps.source-auth.outputs.token }}
+          ref: ${{ steps.source.outputs.commit }}
+          path: app
+          persist-credentials: false
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@1.97.0
+
+      - name: Set up Task
+        uses: arduino/setup-task@v2
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.6
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
+
+      - name: Install locked web and SDK dependencies
+        working-directory: app
+        run: |
+          task install-web
+          task install-sdk SDK_DIR="$GITHUB_WORKSPACE/sdk"
+
+      - name: Verify exact pinned source provenance
+        working-directory: sdk
+        env:
+          RUSTYFLOWS_APP_DIR: ${{ github.workspace }}/app
+        run: bun run check:source
+
+      - name: Source to OpenAPI to web to SDK compatibility
+        working-directory: app
+        # Includes current-source artifact compatibility, generated drift,
+        # typecheck, tests, build and npm pack --dry-run. No publication.
+        run: task check-sdk-compatibility SDK_DIR="$GITHUB_WORKSPACE/sdk"

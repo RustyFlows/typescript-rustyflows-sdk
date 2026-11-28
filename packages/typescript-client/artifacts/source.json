@@ -1,0 +1,10 @@
+{
+  "source_repository": "https://github.com/RustyFlows/rustyflows-app.git",
+  "source_commit": "7a197d7029bb7c3a6b9f919a40e4ceb89853ccf1",
+  "source_dirty": false,
+  "artifacts": {
+    "artifacts/openapi.json": "sha256:ee1d3d6834e6b41efe8bc8f059fd12414fc4a4caab5356a4c66a593e87405ef4",
+    "schemas/workflow-ir.schema.json": "sha256:cf6c78a824e2ad77479f8789bf2d56eec8fcc03d85b6cf1c67391c5e7ffa99ce",
+    "schemas/governed-workflow-package.schema.json": "sha256:d48ad970dc92cbd765715b2955421cc30ee8b46601935419f4f0eb2a4c8cd657"
+  }
+}
